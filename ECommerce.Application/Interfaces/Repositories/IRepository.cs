@@ -1,6 +1,6 @@
 ﻿using ECommerce.Domain.Common;
 
-namespace ECommerce.Application.Interfaces;
+namespace ECommerce.Application.Interfaces.Services;
 
 public interface IRepository<T> where T : BaseEntity
 {

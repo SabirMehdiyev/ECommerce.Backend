@@ -1,40 +1,76 @@
-﻿using ECommerce.Application.DTOs.ProductDtos;
+﻿using AutoMapper;
+using ECommerce.Application.DTOs.ProductDtos;
 using ECommerce.Application.Interfaces.Repositories;
 using ECommerce.Application.Interfaces.Services;
+using ECommerce.Domain.Entities;
 
 namespace ECommerce.Application.Implementations.Services;
 
 public class ProductService : IProductService
 {
     private readonly IProductRepository _repository;
+    private readonly IMapper _mapper;
 
-    public ProductService(IProductRepository repository)
+    public ProductService(IProductRepository repository, IMapper mapper)
     {
         _repository = repository;
+        _mapper = mapper;
     }
 
-    public Task<ProductResponse> CreateAsync(CreateProductRequest request)
+    public async Task<ProductResponse> CreateAsync(CreateProductRequest request)
     {
-        throw new NotImplementedException();
+        var product = _mapper.Map<Product>(request);
+
+        var createdProduct = await _repository.AddAsync(product);
+
+        return _mapper.Map<ProductResponse>(createdProduct);
     }
 
-    public Task<bool> DeleteAsync(int id)
+    public async Task<bool> DeleteAsync(int id)
     {
-        throw new NotImplementedException();
+        var product = await _repository.GetByIdAsync(id);
+
+        if (product is null)
+        {
+            return false;
+        }
+
+        await _repository.DeleteAsync(product);
+
+        return true;
     }
 
-    public Task<List<ProductResponse>> GetAllAsync()
+    public async Task<List<ProductResponse>> GetAllAsync()
     {
-        throw new NotImplementedException();
+        var products = await _repository.GetAllAsync();
+
+        return _mapper.Map<List<ProductResponse>>(products);    
     }
 
-    public Task<ProductResponse?> GetByIdAsync(int id)
+    public async Task<ProductResponse?> GetByIdAsync(int id)
     {
-        throw new NotImplementedException();
+        var product = await _repository.GetByIdAsync(id);
+        if (product == null)
+        {
+            return null;
+        }
+
+        return _mapper.Map<ProductResponse>(product);
     }
 
-    public Task<ProductResponse?> UpdateAsync(int id, UpdateProductRequest request)
+    public async Task<ProductResponse?> UpdateAsync(int id, UpdateProductRequest request)
     {
-        throw new NotImplementedException();
+        var existingProduct = await _repository.GetByIdAsync(id);
+
+        if (existingProduct is null) 
+        {
+            return null;
+        }
+
+        _mapper.Map(request, existingProduct);
+
+        await _repository.UpdateAsync(existingProduct);
+
+        return _mapper.Map<ProductResponse>(existingProduct);
     }
 }

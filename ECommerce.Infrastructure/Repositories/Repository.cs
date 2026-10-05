@@ -1,4 +1,4 @@
-﻿using ECommerce.Application.Interfaces.Services;
+﻿using ECommerce.Application.Interfaces.Repositories;
 using ECommerce.Domain.Common;
 using ECommerce.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;

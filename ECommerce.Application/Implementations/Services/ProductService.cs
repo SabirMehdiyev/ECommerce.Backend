@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using ECommerce.Application.Exceptions;
+using FluentValidation;
 using ECommerce.Application.DTOs.ProductDtos;
 using ECommerce.Application.Interfaces.Repositories;
 using ECommerce.Application.Interfaces.Services;
@@ -10,15 +12,35 @@ public class ProductService : IProductService
 {
     private readonly IProductRepository _repository;
     private readonly IMapper _mapper;
+    private readonly ICategoryRepository _categoryRepository;
+    private readonly IValidator<CreateProductRequest> _createValidator;
+    private readonly IValidator<UpdateProductRequest> _updateValidator;
 
-    public ProductService(IProductRepository repository, IMapper mapper)
+    public ProductService(IProductRepository repository, IMapper mapper,
+        ICategoryRepository categoryRepository, IValidator<CreateProductRequest> createValidator,
+        IValidator<UpdateProductRequest> updateValidator)
     {
         _repository = repository;
         _mapper = mapper;
+        _categoryRepository = categoryRepository;
+        _createValidator = createValidator;
+        _updateValidator = updateValidator;
     }
 
     public async Task<ProductResponse> CreateAsync(CreateProductRequest request)
     {
+        var validationResult = await _createValidator.ValidateAsync(request);
+        if (!validationResult.IsValid)
+        {
+            throw new ValidationException(validationResult.Errors);
+        }
+
+        var category = await _categoryRepository.GetByIdAsync(request.CategoryId);
+        if (category is null)
+        {
+            throw new CategoryNotFoundException();
+        }
+
         var product = _mapper.Map<Product>(request);
 
         var createdProduct = await _repository.AddAsync(product);
@@ -65,6 +87,18 @@ public class ProductService : IProductService
         if (existingProduct is null) 
         {
             return null;
+        }
+
+        var validationResult = await _updateValidator.ValidateAsync(request);
+        if (!validationResult.IsValid)
+        {
+            throw new ValidationException(validationResult.Errors);
+        }
+
+        var category = await _categoryRepository.GetByIdAsync(request.CategoryId);
+        if (category is null)
+        {
+            throw new CategoryNotFoundException();
         }
 
         _mapper.Map(request, existingProduct);

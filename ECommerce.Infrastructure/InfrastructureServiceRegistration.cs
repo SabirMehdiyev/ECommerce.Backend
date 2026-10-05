@@ -16,6 +16,7 @@ public static class InfrastructureServiceRegistration
             options.UseSqlServer(config.GetConnectionString("DefaultConnection"));
         });
         services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddScoped<ICategoryRepository, CategoryRepository>();
         return services;
     }
 }

@@ -13,6 +13,7 @@ public static class ApplicationServiceRegistration
     {
         services.AddAutoMapper(cfg => { }, Assembly.GetExecutingAssembly());
         services.AddScoped<IProductService, ProductService>();
+        services.AddScoped<ICategoryService, CategoryService>();
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
         return services;
     }

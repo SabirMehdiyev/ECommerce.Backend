@@ -38,7 +38,7 @@ public class ProductService : IProductService
         var category = await _categoryRepository.GetByIdAsync(request.CategoryId);
         if (category is null)
         {
-            throw new CategoryNotFoundException();
+            throw new BusinessRuleException("The selected category does not exist.");
         }
 
         var product = _mapper.Map<Product>(request);
@@ -98,7 +98,7 @@ public class ProductService : IProductService
         var category = await _categoryRepository.GetByIdAsync(request.CategoryId);
         if (category is null)
         {
-            throw new CategoryNotFoundException();
+            throw new BusinessRuleException("The selected category does not exist.");
         }
 
         _mapper.Map(request, existingProduct);

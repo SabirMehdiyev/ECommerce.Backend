@@ -44,13 +44,13 @@ namespace Ecommerce.API.Middleware
                         Title = "One or more validation errors occurred."
                     };
                 }
-                else if (exception is CategoryNotFoundException)
+                else if (exception is BusinessRuleException)
                 {
                     problem = new ProblemDetails
                     {
                         Status = StatusCodes.Status400BadRequest,
-                        Title = "Invalid category.",
-                        Detail = "The selected category does not exist."
+                        Title = "Business rule violation.",
+                        Detail = exception.Message
                     };
                 }
                 else

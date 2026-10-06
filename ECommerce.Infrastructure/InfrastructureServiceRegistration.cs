@@ -1,6 +1,8 @@
 ﻿using ECommerce.Application.Interfaces.Repositories;
+using ECommerce.Domain.Entities;
 using ECommerce.Infrastructure.Persistence;
 using ECommerce.Infrastructure.Repositories;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,6 +19,14 @@ public static class InfrastructureServiceRegistration
         });
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
+        services.AddIdentityCore<AppUser>(options =>
+        {
+            options.Password.RequiredLength = 6;
+            options.User.RequireUniqueEmail = true;
+
+        })
+                .AddRoles<IdentityRole>()
+                .AddEntityFrameworkStores<AppDbContext>();
         return services;
     }
 }

@@ -1,5 +1,6 @@
 ﻿using ECommerce.Application.DTOs.ProductDtos;
 using ECommerce.Application.Interfaces.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Ecommerce.API.Controllers;
@@ -15,6 +16,7 @@ public class ProductsController : ControllerBase
         _productService = productService;
     }
 
+    //[Authorize]
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {

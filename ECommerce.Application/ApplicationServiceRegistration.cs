@@ -15,6 +15,7 @@ public static class ApplicationServiceRegistration
         services.AddScoped<IProductService, ProductService>();
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+        services.AddScoped<IAuthService, AuthService>();
         return services;
     }
 }

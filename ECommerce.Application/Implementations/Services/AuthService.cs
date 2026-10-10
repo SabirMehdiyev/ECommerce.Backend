@@ -1,6 +1,7 @@
 ﻿using ECommerce.Application.DTOs.AuthDtos;
 using ECommerce.Application.Exceptions;
 using ECommerce.Application.Interfaces.Services;
+using ECommerce.Domain.Constants;
 using ECommerce.Domain.Entities;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
@@ -37,7 +38,7 @@ public class AuthService : IAuthService
 
         if (user == null)
         {
-            throw new BusinessRuleException("Email və ya parol yanlışdır.");
+            throw new BusinessRuleException("Invalid email or password.");
         }
 
         var result = await _signInManager.CheckPasswordSignInAsync(
@@ -47,10 +48,12 @@ public class AuthService : IAuthService
 
         if (!result.Succeeded)
         {
-            throw new BusinessRuleException("Email və ya parol yanlışdır.");
+            throw new BusinessRuleException("Invalid email or password.");
         }
 
-        return _tokenService.GenerateToken(user);
+        var roles = await _userManager.GetRolesAsync(user);
+
+        return _tokenService.GenerateToken(user, roles);
     }
 
     public async Task RegisterAsync(RegisterRequest request)
@@ -74,6 +77,14 @@ public class AuthService : IAuthService
         if (!result.Succeeded) 
         {
             throw new BusinessRuleException(string.Join("; ", result.Errors.Select(error => error.Description)));
+        }
+
+        var roleResult = await _userManager.AddToRoleAsync(user, Roles.Customer);
+
+        if (!roleResult.Succeeded)
+        {
+            throw new InvalidOperationException(
+                string.Join("; ", roleResult.Errors.Select(error => error.Description)));
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using ECommerce.Application.DTOs.ProductDtos;
 using ECommerce.Application.Interfaces.Services;
+using ECommerce.Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,11 +17,11 @@ public class ProductsController : ControllerBase
         _productService = productService;
     }
 
-    //[Authorize]
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
         var products = await _productService.GetAllAsync();
+
         return Ok(products);
     }
 
@@ -29,7 +30,7 @@ public class ProductsController : ControllerBase
     {
         var product = await _productService.GetByIdAsync(id);
 
-        if(product == null)
+        if (product is null)
         {
             return NotFound();
         }
@@ -37,6 +38,7 @@ public class ProductsController : ControllerBase
         return Ok(product);
     }
 
+    [Authorize(Roles = Roles.Admin)]
     [HttpPost]
     public async Task<IActionResult> Create(CreateProductRequest request)
     {
@@ -45,6 +47,7 @@ public class ProductsController : ControllerBase
         return StatusCode(StatusCodes.Status201Created, product);
     }
 
+    [Authorize(Roles = Roles.Admin)]
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, UpdateProductRequest request)
     {
@@ -58,6 +61,7 @@ public class ProductsController : ControllerBase
         return Ok(product);
     }
 
+    [Authorize(Roles = Roles.Admin)]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
@@ -70,5 +74,4 @@ public class ProductsController : ControllerBase
 
         return NoContent();
     }
-
 }

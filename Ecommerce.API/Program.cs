@@ -1,8 +1,11 @@
 ﻿using Ecommerce.API.Middleware;
 using ECommerce.Application;
+using ECommerce.Domain.Entities;
 using ECommerce.Infrastructure;
+using ECommerce.Infrastructure.Persistence;
 using ECommerce.Infrastructure.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
@@ -71,6 +74,30 @@ builder.Services
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider
+        .GetRequiredService<RoleManager<IdentityRole>>();
+
+    await DataSeeder.SeedRolesAsync(roleManager);
+
+    if (app.Environment.IsDevelopment())
+    {
+        var userManager = scope.ServiceProvider
+            .GetRequiredService<UserManager<AppUser>>();
+
+        var email = builder.Configuration["AdminAccount:Email"]
+            ?? throw new InvalidOperationException(
+                "AdminAccount:Email is missing.");
+
+        var password = builder.Configuration["AdminAccount:Password"]
+            ?? throw new InvalidOperationException(
+                "AdminAccount:Password is missing.");
+
+        await DataSeeder.SeedAdminAsync(userManager, email, password);
+    }
+}
 
 app.UseMiddleware<ExceptionMiddleware>();
 

@@ -1,73 +1,77 @@
 using ECommerce.Application.DTOs.CategoryDtos;
 using ECommerce.Application.Interfaces.Services;
+using ECommerce.Domain.Constants;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Ecommerce.API.Controllers
+namespace Ecommerce.API.Controllers;
+
+[Route("api/[controller]")]
+[ApiController]
+public class CategoriesController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class CategoriesController : ControllerBase
+    private readonly ICategoryService _categoryService;
+
+    public CategoriesController(ICategoryService categoryService)
     {
-        private readonly ICategoryService _categoryService;
+        _categoryService = categoryService;
+    }
 
-        public CategoriesController(ICategoryService categoryService)
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
+    {
+        var categories = await _categoryService.GetAllAsync();
+
+        return Ok(categories);
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(int id)
+    {
+        var category = await _categoryService.GetByIdAsync(id);
+
+        if (category is null)
         {
-            _categoryService = categoryService;
+            return NotFound();
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetAll()
+        return Ok(category);
+    }
+
+    [Authorize(Roles = Roles.Admin)]
+    [HttpPost]
+    public async Task<IActionResult> Create(CreateCategoryRequest request)
+    {
+        var category = await _categoryService.CreateAsync(request);
+
+        return StatusCode(StatusCodes.Status201Created, category);
+    }
+
+    [Authorize(Roles = Roles.Admin)]
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, UpdateCategoryRequest request)
+    {
+        var category = await _categoryService.UpdateAsync(id, request);
+
+        if (category is null)
         {
-            var categories = await _categoryService.GetAllAsync();
-            return Ok(categories);
+            return NotFound();
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        return Ok(category);
+    }
+
+    [Authorize(Roles = Roles.Admin)]
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var deleted = await _categoryService.DeleteAsync(id);
+
+        if (!deleted)
         {
-            var category = await _categoryService.GetByIdAsync(id);
-
-            if(category == null)
-            {
-                return NotFound();
-            }
-
-            return Ok(category);
+            return NotFound();
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Create(CreateCategoryRequest request)
-        {
-            var category = await _categoryService.CreateAsync(request);
-
-            return StatusCode(StatusCodes.Status201Created, category);
-        }
-
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, UpdateCategoryRequest request)
-        {
-            var category = await _categoryService.UpdateAsync(id, request);
-
-            if (category is null)
-            {
-                return NotFound();
-            }
-
-            return Ok(category);
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
-        {
-            var deleted = await _categoryService.DeleteAsync(id);
-
-            if (!deleted)
-            {
-                return NotFound();
-            }
-
-            return NoContent();
-        }
-
+        return NoContent();
     }
 }

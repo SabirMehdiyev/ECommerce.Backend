@@ -18,7 +18,7 @@ public class TokenService : ITokenService
         _jwtSettings = jwtOptions.Value;
     }
 
-    public LoginResponse GenerateToken(AppUser user)
+    public LoginResponse GenerateToken(AppUser user, IEnumerable<string> roles)
     {
         var now = DateTime.UtcNow;
         var expiresAt = now.AddMinutes(_jwtSettings.ExpirationMinutes);
@@ -28,6 +28,11 @@ public class TokenService : ITokenService
             new Claim(JwtRegisteredClaimNames.Sub, user.Id),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
+
+        foreach (var role in roles)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, role));
+        }
 
         var keyBytes = Convert.FromBase64String(_jwtSettings.Key);
         var securityKey = new SymmetricSecurityKey(keyBytes);

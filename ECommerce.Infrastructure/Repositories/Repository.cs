@@ -41,8 +41,11 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
 
     public async Task<T> UpdateAsync(T entity)
     {
+        entity.UpdatedAt = DateTime.UtcNow;
+
         _context.Set<T>().Update(entity);
         await _context.SaveChangesAsync();
+
         return entity;
     }
 }

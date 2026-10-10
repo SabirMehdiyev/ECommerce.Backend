@@ -1,10 +1,11 @@
-﻿using AutoMapper;
+using AutoMapper;
 using ECommerce.Application.Exceptions;
 using FluentValidation;
 using ECommerce.Application.DTOs.ProductDtos;
 using ECommerce.Application.Interfaces.Repositories;
 using ECommerce.Application.Interfaces.Services;
 using ECommerce.Domain.Entities;
+using ECommerce.Application.DTOs;
 
 namespace ECommerce.Application.Implementations.Services;
 
@@ -15,16 +16,18 @@ public class ProductService : IProductService
     private readonly ICategoryRepository _categoryRepository;
     private readonly IValidator<CreateProductRequest> _createValidator;
     private readonly IValidator<UpdateProductRequest> _updateValidator;
+    private readonly IValidator<ProductQueryRequest> _queryValidator;
 
     public ProductService(IProductRepository repository, IMapper mapper,
         ICategoryRepository categoryRepository, IValidator<CreateProductRequest> createValidator,
-        IValidator<UpdateProductRequest> updateValidator)
+        IValidator<UpdateProductRequest> updateValidator, IValidator<ProductQueryRequest> queryValidator)
     {
         _repository = repository;
         _mapper = mapper;
         _categoryRepository = categoryRepository;
         _createValidator = createValidator;
         _updateValidator = updateValidator;
+        _queryValidator = queryValidator;
     }
 
     public async Task<ProductResponse> CreateAsync(CreateProductRequest request)
@@ -62,11 +65,23 @@ public class ProductService : IProductService
         return true;
     }
 
-    public async Task<List<ProductResponse>> GetAllAsync()
+    public async Task<PagedResponse<ProductResponse>> GetAllAsync(ProductQueryRequest request)
     {
-        var products = await _repository.GetAllAsync();
+        var validationResult = await _queryValidator.ValidateAsync(request);
+        if (!validationResult.IsValid)
+        {
+            throw new ValidationException(validationResult.Errors);
+        }
 
-        return _mapper.Map<List<ProductResponse>>(products);    
+        var products = await _repository.GetPagedAsync(request);
+
+        return new PagedResponse<ProductResponse>
+        {
+            Items = _mapper.Map<List<ProductResponse>>(products.Items),
+            TotalCount = products.TotalCount,
+            PageNumber = products.PageNumber,
+            PageSize = products.PageSize
+        };
     }
 
     public async Task<ProductResponse?> GetByIdAsync(int id)

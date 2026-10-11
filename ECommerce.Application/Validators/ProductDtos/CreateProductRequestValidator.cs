@@ -12,5 +12,10 @@ public class CreateProductRequestValidator : AbstractValidator<CreateProductRequ
         RuleFor(request => request.Price).GreaterThan(0).PrecisionScale(18, 2, true);
         RuleFor(request => request.Stock).GreaterThanOrEqualTo(0);
         RuleFor(request => request.CategoryId).GreaterThan(0);
+        RuleFor(x => x.ImageUrl)
+            .MaximumLength(2048)
+            .Must(url =>Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps)
+            .When(x => x.ImageUrl != null)
+            .WithMessage("Şəklin URL-i düzgün HTTPS linki olmalıdır.");
     }
 }

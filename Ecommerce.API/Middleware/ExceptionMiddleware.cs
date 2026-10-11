@@ -19,24 +19,31 @@ namespace Ecommerce.API.Middleware
             {
                 await _next(context);
             }
-            catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
+            catch (OperationCanceledException)
+                when (context.RequestAborted.IsCancellationRequested)
             {
                 throw;
             }
             catch (Exception exception)
             {
-                if (context.Response.HasStarted || context.RequestAborted.IsCancellationRequested)
+                if (context.Response.HasStarted ||
+                    context.RequestAborted.IsCancellationRequested)
                 {
                     throw;
                 }
 
                 ProblemDetails problem;
+
                 if (exception is ValidationException validationException)
                 {
                     var errors = validationException.Errors
                         .GroupBy(error => error.PropertyName)
-                        .ToDictionary(group => group.Key,
-                            group => group.Select(error => error.ErrorMessage).Distinct().ToArray());
+                        .ToDictionary(
+                            group => group.Key,
+                            group => group
+                                .Select(error => error.ErrorMessage)
+                                .Distinct()
+                                .ToArray());
 
                     problem = new ValidationProblemDetails(errors)
                     {
@@ -64,6 +71,7 @@ namespace Ecommerce.API.Middleware
 
                 context.Response.Clear();
                 context.Response.StatusCode = problem.Status!.Value;
+
                 await context.Response.WriteAsJsonAsync<object>(
                     problem,
                     options: null,

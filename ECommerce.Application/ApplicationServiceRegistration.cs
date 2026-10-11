@@ -14,6 +14,7 @@ public static class ApplicationServiceRegistration
         services.AddAutoMapper(cfg => { }, Assembly.GetExecutingAssembly());
         services.AddScoped<IProductService, ProductService>();
         services.AddScoped<ICategoryService, CategoryService>();
+        services.AddScoped<ICartService, CartService>();
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
         services.AddScoped<IAuthService, AuthService>();
         return services;

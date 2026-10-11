@@ -68,4 +68,11 @@ public class ProductRepository : Repository<Product>, IProductRepository
             PageSize = request.PageSize
         };
     }
+
+    public override async Task<Product?> GetByIdAsync(int id)
+    {
+        return await _context.Products
+            .Include(p => p.Category)
+            .FirstOrDefaultAsync(p => p.Id == id);
+    }
 }

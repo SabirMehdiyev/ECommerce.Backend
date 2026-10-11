@@ -29,6 +29,12 @@ public class AuthController : ControllerBase
     {
         var response = await _authService.LoginAsync(request);
 
+        if (response is null)
+        {
+            return Unauthorized("Invalid email or password.");
+        }
+
+
         return Ok(response);
     }
 }

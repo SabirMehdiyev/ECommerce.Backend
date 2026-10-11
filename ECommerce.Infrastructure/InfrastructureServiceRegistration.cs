@@ -23,6 +23,7 @@ public static class InfrastructureServiceRegistration
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<ICartRepository, CartRepository>();
+        services.AddScoped<ITransactionService, TransactionService>();
         services.AddIdentityCore<AppUser>(options =>
         {
             options.Password.RequiredLength = 6;

@@ -15,17 +15,19 @@ public class AuthService : IAuthService
     private readonly IValidator<RegisterRequest> _registerValidator;
     private readonly IValidator<LoginRequest> _loginValidator;
     private readonly ITokenService _tokenService;
+    private readonly ITransactionService _transactionService;
 
-    public AuthService(UserManager<AppUser> userManager, IValidator<RegisterRequest> registerValidator, IValidator<LoginRequest> loginValidator, SignInManager<AppUser> signInManager, ITokenService tokenService)
+    public AuthService(UserManager<AppUser> userManager, IValidator<RegisterRequest> registerValidator, IValidator<LoginRequest> loginValidator, SignInManager<AppUser> signInManager, ITokenService tokenService, ITransactionService transactionService)
     {
         _userManager = userManager;
         _registerValidator = registerValidator;
         _loginValidator = loginValidator;
         _signInManager = signInManager;
         _tokenService = tokenService;
+        _transactionService = transactionService;
     }
 
-    public async Task<LoginResponse> LoginAsync(LoginRequest request)
+    public async Task<LoginResponse?> LoginAsync(LoginRequest request)
     {
         var validationResult = await _loginValidator.ValidateAsync(request);
 
@@ -38,7 +40,7 @@ public class AuthService : IAuthService
 
         if (user == null)
         {
-            throw new BusinessRuleException("Invalid email or password.");
+            return null;
         }
 
         var result = await _signInManager.CheckPasswordSignInAsync(
@@ -48,7 +50,7 @@ public class AuthService : IAuthService
 
         if (!result.Succeeded)
         {
-            throw new BusinessRuleException("Invalid email or password.");
+            return null;
         }
 
         var roles = await _userManager.GetRolesAsync(user);
@@ -72,19 +74,23 @@ public class AuthService : IAuthService
             UserName = request.Email
         };
 
-        var result = await _userManager.CreateAsync(user, request.Password);
-
-        if (!result.Succeeded) 
+        await _transactionService.ExecuteAsync(async () =>
         {
-            throw new BusinessRuleException(string.Join("; ", result.Errors.Select(error => error.Description)));
-        }
+            var result = await _userManager.CreateAsync(user, request.Password);
 
-        var roleResult = await _userManager.AddToRoleAsync(user, Roles.Customer);
+            if (!result.Succeeded)
+            {
+                throw new BusinessRuleException(
+                    string.Join("; ", result.Errors.Select(error => error.Description)));
+            }
 
-        if (!roleResult.Succeeded)
-        {
-            throw new InvalidOperationException(
-                string.Join("; ", roleResult.Errors.Select(error => error.Description)));
-        }
+            var roleResult = await _userManager.AddToRoleAsync(user, Roles.Customer);
+
+            if (!roleResult.Succeeded)
+            {
+                throw new InvalidOperationException(
+                    string.Join("; ", roleResult.Errors.Select(error => error.Description)));
+            }
+        });
     }
 }
